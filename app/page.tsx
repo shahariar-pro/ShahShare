@@ -60,9 +60,13 @@ export default function Home() {
     })
   }
 
-  const handleUpload = async () => {
-    if (selectedFiles.length === 0) {
+  const handleUpload = async (showShareResult: boolean = true) => {
+    if (selectedFiles.length === 0 && uploadMode === 'file') {
       setUploadError('Please select at least one file')
+      return
+    }
+    if (!textContent && uploadMode === 'text') {
+      setUploadError('Please enter some text')
       return
     }
 
@@ -70,9 +74,18 @@ export default function Home() {
     setUploadError(null)
 
     try {
-      const uploadedFile = selectedFiles[0]
       const formData = new FormData()
-      formData.append('file', uploadedFile.file)
+      
+      if (uploadMode === 'file') {
+        const uploadedFile = selectedFiles[0]
+        formData.append('file', uploadedFile.file)
+      } else {
+        // Handle text as a virtual file
+        const blob = new Blob([textContent], { type: 'text/plain' })
+        const file = new File([blob], 'shared-text.txt', { type: 'text/plain' })
+        formData.append('file', file)
+      }
+
       formData.append('password', shareOptions.password)
       formData.append('expiryDays', shareOptions.expiryDays.toString())
       formData.append('description', shareOptions.description)
@@ -88,12 +101,19 @@ export default function Home() {
       }
 
       const data = await response.json()
-      setShareResult({
-        ...data.upload,
-        password: shareOptions.password,
-      })
+      
+      if (showShareResult) {
+        setShareResult({
+          ...data.upload,
+          password: shareOptions.password,
+        })
+      } else {
+        // Show success and clear state
+        alert('File uploaded successfully! Check "My Files" to view it.')
+      }
 
       setSelectedFiles([])
+      setTextContent('')
       setShareOptions({ password: '', expiryDays: 7, description: '' })
     } catch (error) {
       setUploadError(
@@ -373,18 +393,6 @@ export default function Home() {
             <Card className="p-6 border border-border bg-card/50">
               <h3 className="text-sm font-semibold mb-2">Privacy</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Files are securely stored and automatically deleted after expiry. No sign-up required.
-              </p>
-            </Card>
-          </div>
-        </div>
-      </div>
-
-      <Footer />
-    </main>
-  )
-}
-text-muted-foreground leading-relaxed">
                 Files are securely stored and automatically deleted after expiry. No sign-up required.
               </p>
             </Card>

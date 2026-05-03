@@ -27,8 +27,30 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // TODO: Fetch uploads from API
-    setIsLoading(false)
+    async function fetchUploads() {
+      try {
+        const response = await fetch('/api/manage')
+        const data = await response.json()
+        if (data.success) {
+          setUploads(data.uploads.map((u: any) => ({
+            id: u.id,
+            name: u.filename,
+            size: u.file_size,
+            createdAt: u.created_at,
+            expiresAt: u.expires_at,
+            password: !!u.password_hash,
+            shortId: u.short_id,
+            downloads: u.downloaded_count || 0
+          })))
+        }
+      } catch (error) {
+        console.error('Failed to fetch uploads:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUploads()
   }, [])
 
   const filteredUploads = uploads.filter(upload =>
@@ -110,17 +132,6 @@ export default function Dashboard() {
               } catch (error) {
                 console.error('Failed to delete:', error)
               }
-            }} />
-          )}
-        </div>
-      </div>
-
-      <Footer />
-    </main>
-  )
-}
-loads={filteredUploads} onDelete={(id) => {
-              setUploads(uploads.filter(u => u.id !== id))
             }} />
           )}
         </div>
