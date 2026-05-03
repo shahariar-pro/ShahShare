@@ -5,18 +5,14 @@ import { getUserUploads, deleteUpload } from '@/lib/db'
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    
+    // Fetch all uploads ordered by creation date
+    const { data: uploads, error } = await supabase
+      .from('uploads')
+      .select('*')
+      .order('created_at', { ascending: false })
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const uploads = await getUserUploads(user.id)
+    if (error) throw error
 
     return NextResponse.json({
       success: true,

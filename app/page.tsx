@@ -320,15 +320,26 @@ export default function Home() {
             )}
 
             {(uploadMode === 'file' && selectedFiles.length > 0) || (uploadMode === 'text' && textContent.length > 0) ? (
-              <Button
-                size="lg"
-                onClick={handleUpload}
-                disabled={isUploading}
-                className="w-full"
-              >
-                {isUploading ? 'Uploading...' : 'Generate Share Link'}{' '}
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
+              <div className="flex gap-4">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => handleUpload(false)}
+                  disabled={isUploading}
+                  className="flex-1"
+                >
+                  {isUploading ? 'Uploading...' : 'Just Upload'}
+                </Button>
+                <Button
+                  size="lg"
+                  onClick={() => handleUpload(true)}
+                  disabled={isUploading}
+                  className="flex-1"
+                >
+                  {isUploading ? 'Uploading...' : 'Upload & Share'}
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </div>
             ) : null}
           </div>
 
@@ -362,6 +373,18 @@ export default function Home() {
             <Card className="p-6 border border-border bg-card/50">
               <h3 className="text-sm font-semibold mb-2">Privacy</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
+                Files are securely stored and automatically deleted after expiry. No sign-up required.
+              </p>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      <Footer />
+    </main>
+  )
+}
+text-muted-foreground leading-relaxed">
                 Files are securely stored and automatically deleted after expiry. No sign-up required.
               </p>
             </Card>

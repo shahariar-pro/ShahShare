@@ -113,12 +113,18 @@ export async function cleanupExpiredUploads() {
 
   const { data: expired, error: selectError } = await supabase
     .from('uploads')
-    .select('id')
+    .select('id, short_id, filename')
     .lte('expires_at', new Date().toISOString())
 
   if (selectError) throw selectError
 
   if (expired && expired.length > 0) {
+    // Delete files from storage first
+    for (const upload of expired) {
+      const fileName = `${upload.short_id}-${upload.filename}`
+      await supabase.storage.from('files').remove([fileName])
+    }
+
     const { error: deleteError } = await supabase
       .from('uploads')
       .delete()

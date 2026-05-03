@@ -97,7 +97,29 @@ export default function Dashboard() {
               </div>
             </Card>
           ) : (
-            <UploadsList uploads={filteredUploads} onDelete={(id) => {
+            <UploadsList uploads={filteredUploads} onDelete={async (id) => {
+              try {
+                const response = await fetch('/api/manage', {
+                  method: 'DELETE',
+                  body: JSON.stringify({ uploadId: id }),
+                  headers: { 'Content-Type': 'application/json' }
+                })
+                if (response.ok) {
+                  setUploads(uploads.filter(u => u.id !== id))
+                }
+              } catch (error) {
+                console.error('Failed to delete:', error)
+              }
+            }} />
+          )}
+        </div>
+      </div>
+
+      <Footer />
+    </main>
+  )
+}
+loads={filteredUploads} onDelete={(id) => {
               setUploads(uploads.filter(u => u.id !== id))
             }} />
           )}
