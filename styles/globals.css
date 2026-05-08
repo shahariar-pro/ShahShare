@@ -155,4 +155,16 @@
   input, textarea, select {
     font-size: 16px;
   }
+
+  /* Fix for mobile viewport - ensure content fits */
+  .max-w-6xl {
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Ensure cards and containers don't overflow */
+  .card, .p-6, .p-8 {
+    padding: 1rem !important;
+  }
 }

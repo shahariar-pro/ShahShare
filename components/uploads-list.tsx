@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Copy, QrCode as QrCodeIcon, Trash2, Clock, Lock, Download, Eye } from 'lucide-react'
+import { Copy, QrCode as QrCodeIcon, Trash2, Clock, Lock, Download, Eye, Timer } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -47,6 +47,15 @@ export default function UploadsList({ uploads, onDelete }: UploadsListProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
   const [currentUpload, setCurrentUpload] = useState<Upload | null>(null)
+  const [currentTime, setCurrentTime] = useState(Date.now())
+
+  // Update time every minute for countdown
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now())
+    }, 60000) // Update every minute
+    return () => clearInterval(interval)
+  }, [])
 
   const handleCopyLink = (shortId: string) => {
     const link = `${window.location.origin}/file/${shortId}`
@@ -123,6 +132,23 @@ export default function UploadsList({ uploads, onDelete }: UploadsListProps) {
     return days
   }
 
+  const getTimeRemaining = (expiresAt: string) => {
+    const expires = new Date(expiresAt)
+    const diff = expires.getTime() - currentTime
+
+    if (diff <= 0) return { text: 'Expired', urgent: true }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+
+    const urgent = days <= 1
+
+    if (days > 0) return { text: days + 'd ' + hours + 'h', urgent }
+    if (hours > 0) return { text: hours + 'h ' + minutes + 'm', urgent }
+    return { text: minutes + 'm', urgent: true }
+  }
+
   return (
     <>
       <div className="space-y-3">
@@ -141,9 +167,9 @@ export default function UploadsList({ uploads, onDelete }: UploadsListProps) {
                   <p className="font-medium truncate">{upload.name}</p>
                   <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted-foreground">
                     <span>{formatFileSize(upload.size)}</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {isExpired ? 'Expired' : `${daysLeft}d left`}
+                    <span className={`flex items-center gap-1 px-2 py-1 rounded-full ${getTimeRemaining(upload.expiresAt).urgent ? (isExpired ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400') : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
+                      <Timer className="w-3 h-3" />
+                      {getTimeRemaining(upload.expiresAt).text}
                     </span>
                     {upload.password && (
                       <span className="flex items-center gap-1">
