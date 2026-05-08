@@ -76,7 +76,16 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete from database and storage
-    await deleteUpload(uploadId)
+    try {
+      await deleteUpload(uploadId)
+      console.log('Delete: successfully deleted upload')
+    } catch (deleteError) {
+      console.error('Delete: deleteUpload error:', deleteError)
+      return NextResponse.json(
+        { error: 'Failed to delete file: ' + (deleteError instanceof Error ? deleteError.message : 'Unknown error') },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       success: true,

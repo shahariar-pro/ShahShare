@@ -67,7 +67,7 @@ export async function getUserUploads(user_id: string) {
 
 export async function deleteUpload(id: string) {
   const supabase = await createClient()
-  console.log('deleteUpload called for:', id)
+  console.log('deleteUpload called for id:', id)
 
   // Get upload info first to delete from storage
   const { data: upload, error: fetchError } = await supabase
@@ -76,25 +76,58 @@ export async function deleteUpload(id: string) {
     .eq('id', id)
     .single()
 
-  console.log('deleteUpload: fetch result:', upload, 'error:', fetchError)
+  console.log('deleteUpload: upload found:', upload, 'fetchError:', fetchError)
 
-  if (!fetchError && upload) {
-    // Extract file name from URL or use our naming convention
-    // Our convention: ${shortId}-${file.name}
-    const fileName = upload.short_id + '-' + upload.filename
-    console.log('deleteUpload: removing file from storage:', fileName)
-    const { error: storageError } = await supabase.storage.from('files').remove([fileName])
-    console.log('deleteUpload: storage remove result:', storageError)
+  if (fetchError) {
+    console.error('deleteUpload: Failed to fetch upload:', fetchError)
+    throw new Error('Failed to find upload: ' + fetchError.message)
   }
 
-  console.log('deleteUpload: deleting from database')
+  if (!upload) {
+    console.error('deleteUpload: No upload found with id:', id)
+    throw new Error('Upload not found')
+  }
+
+  // Try to delete from storage - don't fail if this doesn't work
+  if (upload.blob_url) {
+    try {
+      // Extract file path from blob_url or construct from short_id and filename
+      let fileName = ''
+      if (upload.blob_url.includes('/files/')) {
+        // blob_url is like: https://xxx.supabase.co/storage/v1/object/public/files/shortId-filename.ext
+        const urlParts = upload.blob_url.split('/files/')
+        if (urlParts.length > 1) {
+          fileName = urlParts[1]
+        }
+      }
+      if (!fileName) {
+        fileName = upload.short_id + '-' + upload.filename
+      }
+      console.log('deleteUpload: Attempting to remove from storage:', fileName)
+      const { error: storageError } = await supabase.storage.from('files').remove([fileName])
+      if (storageError) {
+        console.warn('deleteUpload: Storage removal warning:', storageError)
+      } else {
+        console.log('deleteUpload: Storage file removed successfully')
+      }
+    } catch (storageErr) {
+      console.warn('deleteUpload: Storage removal failed:', storageErr)
+    }
+  }
+
+  console.log('deleteUpload: Attempting database delete for id:', id)
   const { error } = await supabase
     .from('uploads')
     .delete()
     .eq('id', id)
 
-  console.log('deleteUpload: delete result:', error)
-  if (error) throw error
+  console.log('deleteUpload: Database delete result, error:', error)
+  if (error) {
+    console.error('deleteUpload: Database delete failed:', error)
+    throw new Error('Failed to delete from database: ' + error.message)
+  }
+
+  console.log('deleteUpload: Successfully completed for id:', id)
 }
 
 export async function incrementDownloadCount(id: string) {
