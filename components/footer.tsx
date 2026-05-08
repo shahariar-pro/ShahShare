@@ -71,7 +71,7 @@ export function Footer() {
 
         {/* Bottom */}
         <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p>© 2024 ShahShare by Shahariar. All rights reserved.</p>
+          <p>© 2026 ShahShare by Shahariar. All rights reserved.</p>
           <p>Made with care for secure file sharing</p>
         </div>
       </div>

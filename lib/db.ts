@@ -67,6 +67,7 @@ export async function getUserUploads(user_id: string) {
 
 export async function deleteUpload(id: string) {
   const supabase = await createClient()
+  console.log('deleteUpload called for:', id)
 
   // Get upload info first to delete from storage
   const { data: upload, error: fetchError } = await supabase
@@ -75,18 +76,24 @@ export async function deleteUpload(id: string) {
     .eq('id', id)
     .single()
 
+  console.log('deleteUpload: fetch result:', upload, 'error:', fetchError)
+
   if (!fetchError && upload) {
     // Extract file name from URL or use our naming convention
     // Our convention: ${shortId}-${file.name}
-    const fileName = `${upload.short_id}-${upload.filename}`
-    await supabase.storage.from('files').remove([fileName])
+    const fileName = upload.short_id + '-' + upload.filename
+    console.log('deleteUpload: removing file from storage:', fileName)
+    const { error: storageError } = await supabase.storage.from('files').remove([fileName])
+    console.log('deleteUpload: storage remove result:', storageError)
   }
 
+  console.log('deleteUpload: deleting from database')
   const { error } = await supabase
     .from('uploads')
     .delete()
     .eq('id', id)
 
+  console.log('deleteUpload: delete result:', error)
   if (error) throw error
 }
 

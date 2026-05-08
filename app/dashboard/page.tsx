@@ -29,7 +29,8 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchUploads() {
       try {
-        const response = await fetch('/api/manage')
+        // Add cache-busting timestamp
+        const response = await fetch('/api/manage?_=' + Date.now())
         const data = await response.json()
         if (data.success) {
           setUploads(data.uploads.map((u: any) => ({
@@ -122,16 +123,18 @@ export default function Dashboard() {
           ) : (
             <UploadsList uploads={filteredUploads} onDelete={async (id, password) => {
               try {
-                const response = await fetch('/api/manage', {
+                console.log('Deleting upload:', id)
+                const response = await fetch('/api/manage?_=' + Date.now(), {
                   method: 'DELETE',
                   body: JSON.stringify({ uploadId: id, password }),
                   headers: { 'Content-Type': 'application/json' }
                 })
+                const result = await response.json()
+                console.log('Delete response:', result)
                 if (response.ok) {
                   setUploads(uploads.filter(u => u.id !== id))
                 } else {
-                  const data = await response.json()
-                  alert(data.error || 'Failed to delete')
+                  alert(result.error || 'Failed to delete')
                 }
               } catch (error) {
                 console.error('Failed to delete:', error)

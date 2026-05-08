@@ -103,16 +103,24 @@ export default function UploadsList({ uploads, onDelete }: UploadsListProps) {
 
   const handleDownload = async (upload: Upload) => {
     try {
+      // Fetch the file as a blob to force download
       const response = await fetch(`/api/file/${upload.shortId}`)
       if (response.ok) {
         const data = await response.json()
         if (data.file?.blobUrl) {
+          // Fetch the actual file content
+          const fileResponse = await fetch(data.file.blobUrl)
+          const blob = await fileResponse.blob()
+
+          // Create a blob URL and trigger download
+          const blobUrl = URL.createObjectURL(blob)
           const link = document.createElement('a')
-          link.href = data.file.blobUrl
+          link.href = blobUrl
           link.download = upload.name
           document.body.appendChild(link)
           link.click()
           document.body.removeChild(link)
+          URL.revokeObjectURL(blobUrl)
         }
       }
     } catch (error) {

@@ -42,9 +42,11 @@ export async function DELETE(request: NextRequest) {
     const supabase = await createClient()
     const { data: upload, error: fetchError } = await supabase
       .from('uploads')
-      .select('id, password_hash, short_id, filename')
+      .select('id, password_hash, short_id, filename, expires_at')
       .eq('id', uploadId)
       .single()
+
+    console.log('Delete: fetched upload:', upload, 'error:', fetchError)
 
     if (fetchError || !upload) {
       return NextResponse.json(
@@ -55,6 +57,7 @@ export async function DELETE(request: NextRequest) {
 
     // Verify password if the file is password protected and NOT expired
     const isExpired = new Date(upload.expires_at) <= new Date()
+    console.log('Delete: isExpired:', isExpired)
     if (upload.password_hash && !isExpired) {
       if (!password) {
         return NextResponse.json(
