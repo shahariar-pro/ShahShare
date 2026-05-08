@@ -254,26 +254,30 @@ export default function UploadsList({ uploads, onDelete }: UploadsListProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          {uploads.find(u => u.id === deleteId)?.password && (
-            <div className="py-3">
-              <label className="text-sm font-medium block mb-2">
-                This file is password protected. Enter password to delete:
-              </label>
-              <Input
-                type="password"
-                value={deletePassword}
-                onChange={(e) => {
-                  setDeletePassword(e.target.value)
-                  setDeleteError('')
-                }}
-                placeholder="Enter password"
-                className="bg-input"
-              />
-              {deleteError && (
-                <p className="text-sm text-destructive mt-2">{deleteError}</p>
-              )}
-            </div>
-          )}
+          {(() => {
+            const upload = uploads.find(u => u.id === deleteId)
+            const isExpired = upload ? getDaysUntilExpiry(upload.expiresAt) <= 0 : false
+            return upload?.password && !isExpired ? (
+              <div className="py-3">
+                <label className="text-sm font-medium block mb-2">
+                  This file is password protected. Enter password to delete:
+                </label>
+                <Input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => {
+                    setDeletePassword(e.target.value)
+                    setDeleteError('')
+                  }}
+                  placeholder="Enter password"
+                  className="bg-input"
+                />
+                {deleteError && (
+                  <p className="text-sm text-destructive mt-2">{deleteError}</p>
+                )}
+              </div>
+            ) : null
+          })()}
 
           <div className="flex gap-3 justify-end">
             <AlertDialogCancel>Cancel</AlertDialogCancel>

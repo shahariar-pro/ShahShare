@@ -53,8 +53,9 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // Verify password if the file is password protected
-    if (upload.password_hash) {
+    // Verify password if the file is password protected and NOT expired
+    const isExpired = new Date(upload.expires_at) <= new Date()
+    if (upload.password_hash && !isExpired) {
       if (!password) {
         return NextResponse.json(
           { error: 'Password required' },
