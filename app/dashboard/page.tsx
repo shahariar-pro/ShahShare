@@ -40,7 +40,8 @@ export default function Dashboard() {
             expiresAt: u.expires_at,
             password: !!u.password_hash,
             shortId: u.short_id,
-            downloads: u.downloaded_count || 0
+            downloads: u.downloaded_count || 0,
+            blobUrl: u.blob_url
           })))
         }
       } catch (error) {
@@ -119,18 +120,22 @@ export default function Dashboard() {
               </div>
             </Card>
           ) : (
-            <UploadsList uploads={filteredUploads} onDelete={async (id) => {
+            <UploadsList uploads={filteredUploads} onDelete={async (id, password) => {
               try {
                 const response = await fetch('/api/manage', {
                   method: 'DELETE',
-                  body: JSON.stringify({ uploadId: id }),
+                  body: JSON.stringify({ uploadId: id, password }),
                   headers: { 'Content-Type': 'application/json' }
                 })
                 if (response.ok) {
                   setUploads(uploads.filter(u => u.id !== id))
+                } else {
+                  const data = await response.json()
+                  alert(data.error || 'Failed to delete')
                 }
               } catch (error) {
                 console.error('Failed to delete:', error)
+                alert('Failed to delete. Please try again.')
               }
             }} />
           )}
